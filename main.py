@@ -1,3 +1,4 @@
+import os
 from captcha.image import ImageCaptcha
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,6 +8,10 @@ import random
 from keras.models import *
 from keras.layers import *
 import keras
+from keras_applications.imagenet_utils import preprocess_input
+
+# 使用第一张与第三张GPU卡
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 number = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
@@ -95,13 +100,33 @@ def VGG():
     model = Model(inputs=input_tensor, outputs=x)
     return model
 
+def predict():
+    model = load_model('test.h5')
+    # (x,y) = get_next_batch(10)
+    batch_x = np.zeros((1, height, width, 3))
+    # print(x.shape)
+    txt, img = gen_captcha_text_and_image()
 
-model = VGG()
-model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+    batch_x[0,:]=img
+    # img = preprocess_input(img)
+    o = model.predict(batch_x)
+    z = np.array([i.argmax(axis=1) for i in o]).T.tolist()
+    str = [char_set[i] for i in z[0]]
+    print(txt)
+    print(str)
+    # print(y)
+    plt.imshow(img)
+    plt.show()
 
-model.fit_generator(generator=get_next_batch(),
-                    steps_per_epoch=100,
-                    epochs=10,
-                    verbose=1,
-                    validation_data=get_next_batch(),
-                    validation_steps=10)
+if __name__ == "__main__":
+    # predict()
+# model = VGG()
+# model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+    model = load_model('test.h5')
+    model.fit_generator(generator=get_next_batch(),
+                        steps_per_epoch=1000,
+                        epochs=100,
+                        verbose=1,
+                        validation_data=get_next_batch(),
+                        validation_steps=10)
+    model.save('test.h5')
