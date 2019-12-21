@@ -125,7 +125,7 @@ dmypy.json
 .pyre/
 *.xml
 /.idea/
-.h5
+*.h5
 /test_img
 /train_img
 /validation_img
