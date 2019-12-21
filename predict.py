@@ -1,3 +1,5 @@
+import os
+
 from keras.models import load_model
 import numpy as np
 from scipy import misc
@@ -10,7 +12,7 @@ img_size = (60, 160)
 model = load_model('CaptchaForPython.h5')
 letter_list = [chr(i) for i in range(48, 58)] + [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)]
 # letter_list = [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)]
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 def data_generator_test(data, n):  # 样本生成器，节省内存
     while True:
@@ -70,7 +72,8 @@ for i in range(len(test_samples)):
     n += 1
     print('~~~~~~~~~~~~~%d~~~~~~~~~' % (n))
     predict, real = predict2(i)
-
+    real = real.upper()
+    predict = predict.upper()
     if real == predict:
         n_right += 1
     else:

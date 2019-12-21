@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import glob
 from keras.applications.xception import Xception, preprocess_input
@@ -21,7 +23,7 @@ list = [chr(i) for i in range(48, 58)] + [chr(i) for i in range(65, 91)] + [chr(
 # CNN适合在高宽都是偶数的情况，否则需要在边缘补齐，把全体图片都resize成这个尺寸(高，宽，通道)
 img_size = (60, 160)
 input_image = Input(shape=(img_size[0], img_size[1], 3))
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 # 直接将验证码输入，做几个卷积层提取特征，然后把这些提出来的特征连接几个分类器（36分类，因为不区分大小写），
 # 输入图片
 # 用预训练的Xception提取特征,采用平均池化
@@ -38,7 +40,7 @@ model = Model(inputs=input_image, outputs=predicts)
 
 
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-model.load_weights('CaptchaForPython.h5')
+# model.load_weights('CaptchaForPython.h5')
 
 # misc.imread把图片转化成矩阵，
 # misc.imresize重塑图片尺寸misc.imresize(misc.imread(img), img_size)  img_size是自己设定的尺寸
