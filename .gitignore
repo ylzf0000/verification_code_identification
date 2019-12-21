@@ -126,3 +126,6 @@ dmypy.json
 *.xml
 /.idea/
 .h5
+/test_img
+/train_img
+/validation_img

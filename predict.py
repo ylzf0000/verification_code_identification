@@ -62,7 +62,7 @@ def predict2(n):
     return (str, real)
 
 
-test_samples = glob.glob(r'train_img/*.jpg')
+test_samples = glob.glob(r'test_img_img/*.jpg')
 
 n = 0
 n_right = 0

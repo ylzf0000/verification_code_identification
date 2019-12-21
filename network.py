@@ -4,13 +4,15 @@ from keras.applications.xception import Xception, preprocess_input
 from keras.layers import Input, Dense, Dropout
 from keras.models import Model
 from scipy import misc
-samples = glob.glob('./train_img/*.jpg')  # 获取所有样本图片
-np.random.shuffle(samples)  # 将图片打乱
+# samples = glob.glob('./train_img/*.jpg')  # 获取所有样本图片
+# np.random.shuffle(samples)  # 将图片打乱
 
-nb_train = 45000  # 共有5万样本，4.5万用于训练，5k用于验证
-train_samples = samples[:nb_train]
-test_samples = samples[nb_train:]
-
+# nb_train = 45000  # 共有5万样本，4.5万用于训练，5k用于验证
+# train_samples = samples[:nb_train]
+# test_samples = samples[nb_train:]
+train_samples = glob.glob('./train_img/*.jpg')
+validation_samples = glob.glob('./validation_img/*.jpg')
+# test_samples = glob.glob('./test_img_img/*.jpg')
 letter_list = [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)]  # 需要识别的36类
 
 # CNN适合在高宽都是偶数的情况，否则需要在边缘补齐，把全体图片都resize成这个尺寸(高，宽，通道)
@@ -67,7 +69,7 @@ def data_generator(data, batch_size):  # 样本生成器，节省内存
 
 
 model.fit_generator(data_generator(train_samples, 100), steps_per_epoch=1050, epochs=10,
-                    validation_data=data_generator(test_samples, 100), validation_steps=100)
+                    validation_data=data_generator(validation_samples, 100), validation_steps=100)
 # 参数：generator生成器函数,
 # samples_per_epoch，每个epoch以经过模型的样本数达到samples_per_epoch时，记一个epoch结束
 # step_per_epoch:整数，当生成器返回step_per_epoch次数据是记一个epoch结束，执行下一个epoch
