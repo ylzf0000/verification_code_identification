@@ -11,9 +11,12 @@ from scipy import misc
 # train_samples = samples[:nb_train]
 # test_samples = samples[nb_train:]
 train_samples = glob.glob('./train_img/*.jpg')
+np.random.shuffle(train_samples)
 validation_samples = glob.glob('./validation_img/*.jpg')
+np.random.shuffle(validation_samples)
+list = [chr(i) for i in range(48, 58)] + [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)]
 # test_samples = glob.glob('./test_img_img/*.jpg')
-letter_list = [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)]  # 需要识别的36类
+# letter_list = [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)]  # 需要识别的36类
 
 # CNN适合在高宽都是偶数的情况，否则需要在边缘补齐，把全体图片都resize成这个尺寸(高，宽，通道)
 img_size = (60, 160)
@@ -29,7 +32,7 @@ base_model = Xception(input_tensor=input_image, weights='imagenet', include_top=
 # Sigmoid - 用于隐层神经元输出
 # Softmax - 用于多分类神经网络输出
 # Linear - 用于回归神经网络输出（或二分类问题）
-predicts = [Dense(36, activation='softmax')(Dropout(0.5)(base_model.output)) for i in range(4)]
+predicts = [Dense(62, activation='softmax')(Dropout(0.5)(base_model.output)) for i in range(4)]
 
 model = Model(inputs=input_image, outputs=predicts)
 
