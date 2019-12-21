@@ -35,6 +35,6 @@ def gen_validation_captcha(num, captcha_len):
 
 import network
 # import predict
-gen_train_captcha(500000, 4)
-gen_test_captcha(50000, 4)
-gen_validation_captcha(50000, 4)
+# gen_train_captcha(500000, 4)
+# gen_test_captcha(50000, 4)
+# gen_validation_captcha(50000, 4)

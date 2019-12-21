@@ -71,7 +71,7 @@ def data_generator(data, batch_size):  # 样本生成器，节省内存
         # 输出：图片array和四个转化成数字的字母 例如：[array([6]), array([0]), array([3]), array([24])])
 
 
-model.fit_generator(data_generator(train_samples, 100), steps_per_epoch=1050, epochs=10,
+model.fit_generator(data_generator(train_samples, 100), steps_per_epoch=1000, epochs=10,
                     validation_data=data_generator(validation_samples, 100), validation_steps=100)
 # 参数：generator生成器函数,
 # samples_per_epoch，每个epoch以经过模型的样本数达到samples_per_epoch时，记一个epoch结束

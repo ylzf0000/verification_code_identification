@@ -62,7 +62,7 @@ def predict2(n):
     return (str, real)
 
 
-test_samples = glob.glob(r'test_img_img/*.jpg')
+test_samples = glob.glob(r'test_img/*.jpg')
 
 n = 0
 n_right = 0
@@ -76,9 +76,9 @@ for i in range(len(test_samples)):
     else:
         print('real:', real)
         print('predict:', predict)
-        image = mpimg.imread(test_samples[i])
-        plt.axis('off')
-        plt.imshow(image)
-        plt.show()
+        # image = mpimg.imread(test_samples[i])
+        # plt.axis('off')
+        # plt.imshow(image)
+        # plt.show()
 
 print(n, n_right, n_right / n)
