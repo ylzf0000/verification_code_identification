@@ -1,87 +1,81 @@
 import os
 
-from keras.models import load_model
+import imageio
+from tensorflow import keras
 import numpy as np
-from scipy import misc
-from keras.applications.xception import preprocess_input
 import matplotlib.pyplot as plt  # plt 用于显示图片
 import matplotlib.image as mpimg  # mpimg 用于读取图片
 import glob
+from generate_captcha import label_list, captcha_len, label_map
+from train import img_size
+import network
 
-img_size = (60, 160)
-model = load_model('CaptchaForPython.h5')
-letter_list = [chr(i) for i in range(48, 58)] + [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)]
-# letter_list = [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)]
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
-def data_generator_test(data, n):  # 样本生成器，节省内存
+test_samples = glob.glob(r'./test_img/*.jpg')
+np.random.shuffle(test_samples)
+batch = None
+
+
+def data_generator_test(data, batch_size):
     while True:
-        batch = np.array([data[n]])
-        x, y = [], []
+        global batch
+        batch = np.random.choice(data, batch_size)
+        X, Y = [], []
         for img in batch:
-            im = misc.imread(img)
-            im = im[:, :, :3]
-            im = misc.imresize(im, img_size)
-            x.append(im)  # 读取resize图片,再存进x列表
-            y_list = []
+            X.append(np.array(imageio.imread(img)).reshape(img_size))
+            real_label = img[-8:-4]
+            y_list = [label_map[w] for w in real_label]
+            Y.append(y_list)
 
-            real_num = img[-8:-4]
-            for i in real_num:
-                if ord(i) - ord('a') >= 0:
-                    y_list.append(ord(i) - ord('a') + 36)
-                elif ord(i) - ord('A') >= 0:
-                    y_list.append(ord(i) - ord('A') + 10)
-                else:
-                    y_list.append(ord(i) - ord('0'))
-
-            y.append(y_list)  # 把验证码标签添加到y列表,ord(i)-ord('a')把对应字母转化为数字a=0，b=1……z=26
-            # print('real_1:',img[-8:-4])
-        x = preprocess_input(np.array(x).astype(float))  # 原先是dtype=uint8转成一个纯数字的array
-        y = np.array(y)
-
-        yield x, [y[:, i] for i in range(4)]
+        X = keras.applications.xception.preprocess_input(np.array(X).astype(float))
+        Y = np.array(Y)
+        yield X, [Y[:, i] for i in range(4)]
 
 
-def predict2(n):
-    x, y = next(data_generator_test(test_samples, n))
+def predict(model, batch_size, plot=False):
+    x, y = next(data_generator_test(test_samples, batch_size))
     z = model.predict(x)
-    z = np.array([i.argmax(axis=1) for i in z]).T
-    result = z.tolist()
-    v = []
-    for i in range(len(result)):
-        for j in result[i]:
-            v.append(letter_list[j])
+    z = np.array(z)
+    y = np.array(y)
+    w = np.zeros(shape=(captcha_len, batch_size), dtype=int)
+    for i in range(z.shape[0]):
+        w[i] = [np.array(z[i][j]).argmax() for j in range(z.shape[1])]
 
-    # 输出测试结果
-    str = ''
-    for i in v:
-        str += i
+    y_predicted_str_list = [''.join([label_list[w[i][j]] for i in range(w.shape[0])]) for j in range(w.shape[1])]
+    y_true_str_list = [''.join([label_list[y[i][j]] for i in range(y.shape[0])]) for j in range(y.shape[1])]
 
-    real = ''
-    for i in y:
-        for j in i:
-            real += letter_list[j]
-    return (str, real)
+    num_right = sum([y_true_str_list[i] == y_predicted_str_list[i] for i in range(batch_size)])
+    if plot:
+        print(f'正确率: {num_right / batch_size * 100}%')
+    for i in range(batch_size):
+        y_true, y_predicted = y_true_str_list[i], y_predicted_str_list[i]
+        b = (y_true == y_predicted)
+        if not b:
+            print(f'true: {y_true}, predicted: {y_predicted}')
+            if plot:
+                image = mpimg.imread(batch[i])
+                plt.axis('off')
+                plt.imshow(image)
+                plt.show()
+    if not plot:
+        print(f'正确率: {num_right / batch_size * 100}%')
+    return batch_size, num_right
 
 
-test_samples = glob.glob(r'test_img/*.jpg')
+if __name__ == '__main__':
+    model = network.build_network()
+    ns, nrs = 0, 0
+    for i in range(10):
+        n, nr = predict(model, 128, True)
+        ns += n
+        nrs += nr
+    print(f'平均10次正确率：{nrs / ns * 100}%')
 
-n = 0
-n_right = 0
-for i in range(len(test_samples)):
-    n += 1
-    print('~~~~~~~~~~~~~%d~~~~~~~~~' % (n))
-    predict, real = predict2(i)
-    real = real.upper()
-    predict = predict.upper()
-    if real == predict:
-        n_right += 1
-    else:
-        print('real:', real)
-        print('predict:', predict)
-        # image = mpimg.imread(test_samples[i])
-        # plt.axis('off')
-        # plt.imshow(image)
-        # plt.show()
+    # for j in range(z.shape[1]):
+    #     w[i][j] = np.array(z[i][j]).argmax()
 
-print(n, n_right, n_right / n)
+    # for j in range(w.shape[1]):
+    #     y_predicted_str_list.append(''.join([label_list[w[i][j]] for i in range(w.shape[0])]))
+    # for j in range(y.shape[1]):
+    #     y_true_str_list.append(''.join([label_list[y[i][j]] for i in range(y.shape[0])]))
